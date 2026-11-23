@@ -49,6 +49,7 @@ type General struct {
 	Inbound
 	Mode              T.TunnelMode            `json:"mode"`
 	UnifiedDelay      bool                    `json:"unified-delay"`
+	TCPing            bool                    `json:"tcping"`
 	LogLevel          log.LogLevel            `json:"log-level"`
 	IPv6              bool                    `json:"ipv6"`
 	Interface         string                  `json:"interface-name"`
@@ -419,6 +420,7 @@ type RawConfig struct {
 	BindAddress                   string                  `yaml:"bind-address" json:"bind-address"`
 	Mode                          T.TunnelMode            `yaml:"mode" json:"mode"`
 	UnifiedDelay                  bool                    `yaml:"unified-delay" json:"unified-delay"`
+	TCPing                        bool                    `yaml:"tcping" json:"tcping"`
 	LogLevel                      log.LogLevel            `yaml:"log-level" json:"log-level"`
 	IPv6                          bool                    `yaml:"ipv6" json:"ipv6"`
 	ExternalController            string                  `yaml:"external-controller" json:"external-controller"`
@@ -493,6 +495,7 @@ func DefaultRawConfig() *RawConfig {
 		GeodataMode:       geodata.GeodataMode(),
 		GeodataLoader:     "memconservative",
 		UnifiedDelay:      false,
+		TCPing:            true,
 		Authentication:    []string{},
 		LogLevel:          log.INFO,
 		Hosts:             map[string]any{},
@@ -780,6 +783,7 @@ func parseGeneral(cfg *RawConfig) (*General, error) {
 			InboundMPTCP:      cfg.InboundMPTCP,
 		},
 		UnifiedDelay: cfg.UnifiedDelay,
+		TCPing:       cfg.TCPing,
 		Mode:         cfg.Mode,
 		LogLevel:     cfg.LogLevel,
 		IPv6:         cfg.IPv6,
