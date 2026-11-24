@@ -25,7 +25,7 @@ var UnifiedDelay = atomic.NewBool(false)
 // TCPing switches the delay test to the dial alone, so a node reports the round
 // trip to itself rather than the round trip through it to a test URL. Off keeps
 // the HTTP HEAD measurement the panel groups expect.
-var TCPing = atomic.NewBool(true)
+var TCPing = atomic.NewBool(false)
 
 const (
 	defaultHistoriesNum = 10
@@ -150,6 +150,9 @@ func (p *Proxy) MarshalJSON() ([]byte, error) {
 	mapping["extra"] = p.ExtraDelayHistories()
 	mapping["alive"] = p.alive.Load()
 	mapping["name"] = p.Name()
+	// The node's own endpoint, so a client can time the handshake to it instead
+	// of timing a request routed through it.
+	mapping["addr"] = p.Addr()
 	mapping["udp"] = p.SupportUDP()
 	mapping["uot"] = p.SupportUOT()
 
@@ -225,9 +228,10 @@ func (p *Proxy) URLTest(ctx context.Context, url string, expectedStatus utils.In
 	}()
 
 	// TCPing measures the round trip to the node itself, so the dial is the
-	// whole test; the HTTP path below stays for the nodes whose reach beyond
-	// the handshake matters more than a pure link figure.
-	if TCPing.Load() {
+	// whole test. Groups, DIRECT and REJECT dial without a handshake of their
+	// own and would report a meaningless millisecond, so they keep the HTTP
+	// path whatever the switch says.
+	if TCPing.Load() && tcpTestable(p.Type()) {
 		satisfied = true
 		t = uint16(time.Since(start) / time.Millisecond)
 		if t == 0 {
@@ -302,6 +306,16 @@ func (p *Proxy) URLTest(ctx context.Context, url string, expectedStatus utils.In
 		t = 1
 	}
 	return
+}
+
+// tcpTestable reports whether a delay test on the adapter is a real handshake.
+func tcpTestable(t C.AdapterType) bool {
+	switch t {
+	case C.Direct, C.Reject, C.RejectDrop, C.Compatible, C.Pass, C.PassRule,
+		C.Dns, C.Selector, C.Fallback, C.URLTest, C.LoadBalance:
+		return false
+	}
+	return true
 }
 
 func NewProxy(adapter C.ProxyAdapter) *Proxy {

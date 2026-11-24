@@ -495,7 +495,7 @@ func DefaultRawConfig() *RawConfig {
 		GeodataMode:       geodata.GeodataMode(),
 		GeodataLoader:     "memconservative",
 		UnifiedDelay:      false,
-		TCPing:            true,
+		TCPing:            false,
 		Authentication:    []string{},
 		LogLevel:          log.INFO,
 		Hosts:             map[string]any{},
